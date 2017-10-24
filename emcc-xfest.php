@@ -115,8 +115,7 @@ function xfest_register_api_hooks () {
 		'args' => array(
 			'id' => array(
 				'validate_callback' => function($param, $request, $key) {
-					$term = term_exists($param);
-					return is_numeric( $param ) && $term !== 0 && $term !== null;
+					return is_numeric( $param );
 				},
 				'required' => true
 			)
@@ -127,8 +126,11 @@ function xfest_register_api_hooks () {
 function xfest_get_event ( WP_REST_Request $request ) {
 	$event_id = $request['id'];
 
+	$campuses = array();
+
 	$return = array(
-		'event_id' => $event_id
+		//'event_id' => $event_id,
+		$campuses
 	);
 
 	$response = new WP_REST_Response( $return );

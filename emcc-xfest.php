@@ -568,122 +568,37 @@ function xfest_get_messages ( $request ) {
 }
 */
 
-function xfest_geo_checkin ( WP_REST_Request $request ) {
-	$mysqli = new mysqli('10.25.1.5', 'xfestremote', 'Xfest2pass.', 'xfestdb');
-	if ($mysqli->connect_errno) {
-		$return = array(
-			'errno' => $mysqli->connect_errno,
-			'error' => $mysqli->connect_error
-		);
-		$response = new WP_REST_Response( $return );
-		$response->header( 'Access-Control-Allow-Origin', '*' );
-		$response->set_status( 503 );
-		return $response;
-	}
-	
-	$query = "INSERT INTO geocheckin (event, duuid, lat, lon, acc) VALUES (?,?,?,?,?)";
-	$stmt = $mysqli->prepare($query);
-
-	$stmt->bind_param("isddd", $val1, $val2, $val3, $val4, $val5);
-
-	$val1 = intval($request['event']);
-	$val2 = $request['duuid'];
-	$val3 = floatval($request['lat']);
-	$val4 = floatval($request['lon']);
-	$val5 = floatval($request['acc']);
-
-	if(!$stmt->execute()) {
-		$return = array(
-			'error' => $stmt->error
-		);
-		$response = new WP_REST_Response( $return );
-		$response->header( 'Access-Control-Allow-Origin', '*' );
-		$response->set_status( 400 );
-		return $response;
-	}
-	
-	$stmt->close();
-	$mysqli->close();
-	
-	$response = new WP_REST_Response( $return );
-	$response->header( 'Access-Control-Allow-Origin', '*' );
-	$response->set_status( 201 );
-	return $response;
-}
-
-function xfest_beacon_checkin ( WP_REST_Request $request ) {
-	$mysqli = new mysqli('10.25.1.5', 'xfestremote', 'Xfest2pass.', 'xfestdb');
-	if ($mysqli->connect_errno) {
-		$return = array(
-			'errno' => $mysqli->connect_errno,
-			'error' => $mysqli->connect_error
-		);
-		$response = new WP_REST_Response( $return );
-		$response->header( 'Access-Control-Allow-Origin', '*' );
-		$response->set_status( 503 );
-		return $response;
-	}
-	
-	$query = "INSERT INTO beaconcheckin (event, duuid, uuid, major, minor) VALUES (?,?,?,?,?)";
-	$stmt = $mysqli->prepare($query);
-
-	$stmt->bind_param("issii", $val1, $val2, $val3, $val4, $val5);
-
-	$val1 = intval($request['event']);
-	$val2 = $request['duuid'];
-	$val3 = $request['uuid'];
-	$val4 = $request['major'];
-	$val5 = $request['minor'];
-
-	if(!$stmt->execute()) {
-		$return = array(
-			'error' => $stmt->error
-		);
-		$response = new WP_REST_Response( $return );
-		$response->header( 'Access-Control-Allow-Origin', '*' );
-		$response->set_status( 400 );
-		return $response;
-	}
-	
-	$stmt->close();
-	$mysqli->close();
-	
-	$response = new WP_REST_Response( $return );
-	$response->header( 'Access-Control-Allow-Origin', '*' );
-	$response->set_status( 201 );
-	return $response;
-}
-
 /*
-*	Geo-meta in Activities custom post types
+*	Geo-meta in Locations custom post types
 */
 
 function xfest_enqueue_admin ($hook) {
+	require_once('cred.php');
     wp_enqueue_script( 'google_maps', 'https://maps.googleapis.com/maps/api/js?key=&libraries=drawing', array( 'jquery' ) );
 }
 add_action( 'admin_enqueue_scripts', 'xfest_enqueue_admin' );
-/*
-function adding_custom_meta_boxes_activity ( $post ) {
+
+function adding_custom_meta_boxes_location ( $post ) {
     add_meta_box( 
-        'activity_geo_meta_box',
+        'location_geo_meta_box',
         __( 'Geotag' ),
-        'render_activity_geo_meta_box',
-        'activity',
+        'render_location_geo_meta_box',
+        'location',
         'advanced',
         'high'
     );
 }
-add_action( 'add_meta_boxes_activity', 'adding_custom_meta_boxes_activity' );
+add_action( 'add_meta_boxes_location', 'adding_custom_meta_boxes_location' );
 
-function render_activity_geo_meta_box ( $post ) { ?>
-<div id="activity_geo_meta_box_map" style="width: 100%; height: 400px;"></div>
+function render_location_geo_meta_box ( $post ) { ?>
+<div id="location_geo_meta_box_map" style="width: 100%; height: 400px;"></div>
 <script>	
 	jQuery(document).ready(function( $ ) {
 		var currentShape;
 
 		// display blank map
 		var map = new google.maps.Map(
-			document.getElementById('activity_geo_meta_box_map'), {
+			document.getElementById('location_geo_meta_box_map'), {
 				center: {lat: 52.938597, lng: -1.195291},
 				zoom: 15
 			}
@@ -731,81 +646,7 @@ function render_activity_geo_meta_box ( $post ) { ?>
 	});
 </script>
 <?php	
-}*/
-
-/*
-*	Geo-meta in Buildings custom post types
-*/
-/*
-function adding_custom_meta_boxes_buildings ( $post ) {
-    add_meta_box( 
-        'building_geo_meta_box',
-        __( 'Geotag' ),
-        'render_building_geo_meta_box',
-        'building',
-        'advanced',
-        'high'
-    );
 }
-add_action( 'add_meta_boxes_building', 'adding_custom_meta_boxes_buildings' );
-
-function render_building_geo_meta_box ( $post ) { ?>
-<div id="building_geo_meta_box_map" style="width: 100%; height: 400px;"></div>
-<script>	
-	jQuery(document).ready(function( $ ) {
-		var currentShape;
-
-		// display blank map
-		var map = new google.maps.Map(
-			document.getElementById('building_geo_meta_box_map'), {
-				center: {lat: 52.938597, lng: -1.195291},
-				zoom: 15
-			}
-		);
-
-		// show drawing manager
-		var drawingManager = new google.maps.drawing.DrawingManager({
-			drawingMode: google.maps.drawing.OverlayType.MARKER,
-			drawingControl: true,
-			drawingControlOptions: {
-				position: google.maps.ControlPosition.TOP_CENTER,
-				drawingModes: [
-					google.maps.drawing.OverlayType.MARKER
-				]
-			},
-			markerOptions: {
-				clickable: false,
-				editable: false
-			}
-		});
-		drawingManager.setMap(map);
-
-		if (jQuery('#acf-field-latitude').val() && jQuery('#acf-field-longitude').val()) {
-			currentShape = new google.maps.Marker({
-				position: {lat: parseFloat(jQuery('#acf-field-latitude').val()), lng: parseFloat(jQuery('#acf-field-longitude').val())}
-			});
-			currentShape.setMap(map);
-			map.setCenter(currentShape.getPosition());
-		}
-
-		google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
-			if (typeof currentShape !== "undefined") { // only show one shape at a time
-				currentShape.setMap(null);
-			}
-	
-			currentShape = event.overlay;
-	
-			switch (event.type) {
-				case google.maps.drawing.OverlayType.MARKER:
-					jQuery('#acf-field-latitude').val(currentShape.getPosition().lat());
-					jQuery('#acf-field-longitude').val(currentShape.getPosition().lng());
-					break;
-			}
-		});
-	});
-</script>
-<?php	
-}*/
 
 /*
 *	Simplify

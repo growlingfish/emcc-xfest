@@ -574,7 +574,7 @@ function xfest_get_messages ( $request ) {
 
 function xfest_enqueue_admin ($hook) {
 	require_once('cred.php');
-    wp_enqueue_script( 'google_maps', 'https://maps.googleapis.com/maps/api/js?key=&libraries=drawing', array( 'jquery' ) );
+    wp_enqueue_script( 'google_maps', 'https://maps.googleapis.com/maps/api/js?key='.GOOGLEMAPSAPI.'&libraries=drawing', array( 'jquery' ) );
 }
 add_action( 'admin_enqueue_scripts', 'xfest_enqueue_admin' );
 

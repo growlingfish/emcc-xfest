@@ -4,7 +4,7 @@ Plugin Name: 		EMCC xFest
 Plugin URI:			https://github.com/growlingfish/emcc-xfest
 GitHub Plugin URI: 	https://github.com/growlingfish/emcc-xfest
 Description: 		EMCC xFest server
-Version:     		0.0.0.2
+Version:     		0.0.0.3
 Author:      		Ben Bedwell
 Author URI:  		http://www.growlingfish.com/
 License:     		GPL3
@@ -106,467 +106,36 @@ function xfest_filter_activities_by_event () {
 
 $namespace = 'xfest/';
 
-add_action( 'rest_api_init', 'xfest_register_v2_api_hooks' );
-function xfest_register_v2_api_hooks () {
-	/*global $namespace;
-	register_rest_route( $namespace.'v2', '/event/(?P<id>\d+)/(?P<user>.+)', array(
+add_action( 'rest_api_init', 'xfest_register_api_hooks' );
+function xfest_register_api_hooks () {
+	global $namespace;
+	register_rest_route( $namespace, '/event/(?P<id>\d+)/', array(
 		'methods'  => 'GET',
 		'callback' => 'xfest_get_event',
 		'args' => array(
 			'id' => array(
 				'validate_callback' => function($param, $request, $key) {
-					return is_numeric( $param );
-				},
-				'required' => true
-			),
-			'user' => array(
-				'validate_callback' => function ($param, $request, $key) {
-					$super_admins = get_users(array( 'role' => 'administrator' ));
-					foreach ($super_admins as $admin) {
-						if (password_verify($admin->user_login, $param)) {
-							return true;
-						}
-					}
-					return false;
+					$term = term_exists($param);
+					return is_numeric( $param ) && $term !== 0 && $term !== null;
 				},
 				'required' => true
 			)
 		)
 	) );
-	register_rest_route( $namespace.'v2', '/events/(?P<user>.+)', array(
-		'methods'  => 'GET',
-		'callback' => 'xfest_get_events',
-		'args' => array(
-			'user' => array(
-				'validate_callback' => function ($param, $request, $key) {
-					$super_admins = get_users(array( 'role' => 'administrator' ));
-					foreach ($super_admins as $admin) {
-						if (password_verify($admin->user_login, $param)) {
-							return true;
-						}
-					}
-					return false;
-				},
-				'required' => true
-			)
-		)
-	) );
-	register_rest_route( $namespace.'v2', '/messages/(?P<eventid>\d+)/(?P<user>.+)', array(
-		'methods'  => 'GET',
-		'callback' => 'xfest_get_messages',
-		'args' => array(
-			'eventid' => array(
-				'validate_callback' => function($param, $request, $key) {
-					return is_numeric( $param );
-				},
-				'required' => true
-			),
-			'user' => array(
-				'validate_callback' => function ($param, $request, $key) {
-					$super_admins = get_users(array( 'role' => 'administrator' ));
-					foreach ($super_admins as $admin) {
-						if (password_verify($admin->user_login, $param)) {
-							return true;
-						}
-					}
-					return false;
-				},
-				'required' => true
-			)
-		)
-	) );
-	register_rest_route( $namespace.'v2', '/checkin/geo/(?P<event>\d+)/(?P<duuid>[\w\-]+)/(?P<lat>[\-0-9\.]+)/(?P<lon>[\-0-9\.]+)/(?P<acc>[0-9\.]+)/(?P<user>.+)', array(
-		'methods'  => 'GET',
-		'callback' => 'xfest_geo_checkin',
-		'args' => array(
-			'event' => array(
-				'validate_callback' => function($param, $request, $key) {
-					return is_numeric( $param );
-				},
-				'required' => true
-			),
-			'lat' => array(
-				'validate_callback' => function($param, $request, $key) {
-					return is_numeric( $param );
-				},
-				'required' => true
-			),
-			'lon' => array(
-				'validate_callback' => function($param, $request, $key) {
-					return is_numeric( $param );
-				},
-				'required' => true
-			),
-			'acc' => array(
-				'validate_callback' => function($param, $request, $key) {
-					return is_numeric( $param );
-				},
-				'required' => true
-			),
-			'user' => array(
-				'validate_callback' => function ($param, $request, $key) {
-					$super_admins = get_users(array( 'role' => 'administrator' ));
-					foreach ($super_admins as $admin) {
-						if (password_verify($admin->user_login, $param)) {
-							return true;
-						}
-					}
-					return false;
-				},
-				'required' => true
-			)
-		)
-	) );
-	register_rest_route( $namespace.'v2', '/checkin/beacon/(?P<event>\d+)/(?P<duuid>[\w\-]+)/(?P<uuid>[0-9a-fA-F:\-]+)/(?P<major>\d+)/(?P<minor>\d+)/(?P<user>.+)', array(
-		'methods'  => 'GET',
-		'callback' => 'xfest_beacon_checkin',
-		'args' => array(
-			'event' => array(
-				'validate_callback' => function($param, $request, $key) {
-					return is_numeric( $param );
-				},
-				'required' => true
-			),
-			'major' => array(
-				'validate_callback' => function($param, $request, $key) {
-					return is_numeric( $param );
-				},
-				'required' => true
-			),
-			'minor' => array(
-				'validate_callback' => function($param, $request, $key) {
-					return is_numeric( $param );
-				},
-				'required' => true
-			),
-			'user' => array(
-				'validate_callback' => function ($param, $request, $key) {
-					$super_admins = get_users(array( 'role' => 'administrator' ));
-					foreach ($super_admins as $admin) {
-						if (password_verify($admin->user_login, $param)) {
-							return true;
-						}
-					}
-					return false;
-				},
-				'required' => true
-			)
-		)
-	) );*/
 }
-/*
+
 function xfest_get_event ( WP_REST_Request $request ) {
 	$event_id = $request['id'];
-	
-	$return->schedule = array();
-        
-	$return->beacons = array();
-	$beacons = get_terms( array(
-    	'taxonomy' => 'beacon',
-    	'hide_empty' => false,
-	) );
-	foreach ($beacons as $beacon) {
-			$return->beacons[] = array(
-					'ID'                    => $beacon->term_id,
-					'UUID'                  => $beacon->name,
-					'description'   		=> $beacon->description
-			);
-	}
-	
-	$return->buildings = array();
-	$query = array(
-			'numberposts'   => -1,
-			'post_type'     => 'building',
-			'post_status'   => 'publish'
-	);
-	$all_buildings = get_posts( $query );
-	foreach ($all_buildings as $building) {
-		$this_building = array(
-			'ID'            => $building->ID,
-			'name'          => $building->post_title,
-			'lat'           => get_field( 'latitude', $building->ID ),
-			'lon'           => get_field( 'longitude', $building->ID ),
-			'beacons'		=> array()
-		);
-		
-		$building_beacons = wp_get_post_terms( $building->ID, 'beacon' );
-		foreach ($building_beacons as $beacon) {
-				$this_building['beacons'][] = $beacon->term_id;
-		}
-		
-		$return->buildings[] = $this_building;
-	}
-		
-	$return->tracks = array();
-	$tags = get_tags();
-	foreach ($tags as $tag) {
-		if (strtolower($tag->name) == 'subject' || strtolower($tag->name) == 'general') {
-			$openday_category = strtolower($tag->name);
-		} else {
-			$openday_category = false;
-		}
-		$return->tracks[] = array(
-				'ID'                    => $tag->term_id,
-				'name'                  => $tag->name,
-				'openday_category'		=> $openday_category
-		);
-	}
 
-	$query = array(
-			'numberposts'   => -1,
-			'post_type'     => 'activity',
-			'post_status'   => 'publish',
-			'meta_key'  	=> 'start_time',
-			'orderby'       => array('meta_value' => 'ASC'),
-			'tax_query'     => array(
-					array(
-							'taxonomy' => 'events',
-							'terms'    => $event_id
-					)
-			)
+	$return = array(
+		'event_id' => $event_id
 	);
-	$all_posts = get_posts( $query );
 
-	$dates = array();
-	foreach ( $all_posts as $post ) {
-			if (!in_array (get_field( 'active_date', $post->ID ), $dates)) {
-					$dates[] = get_field( 'active_date', $post->ID );
-					$day->date = get_field( 'active_date', $post->ID );
-					$day->groups = array();
-					$return->schedule[] = $day;
-					unset($day);
-			}
-	}
-	
-	$dropInLabel = 'Drop-in any time';
-	$return->dropInLabel = $dropInLabel;
-	
-	foreach ( $all_posts as $post ) {       
-		$session = array(
-				'ID'            => $post->ID,
-				'name'          => $post->post_title,
-				'image'         => get_the_post_thumbnail($post->ID),
-				'location'      => get_field( 'location', $post->ID ),
-				'description'   => $post->post_content,
-				'openday_category'	=> false,
-				'excerpt'       => $post->post_excerpt,
-				'accessibility' => get_field( 'accessibility', $post->ID ),
-				'speakerNames'  => get_field( 'organiser', $post->ID ),
-				'timeStart'     => get_field( 'start_time', $post->ID ),
-				'timeEnd'       => get_field( 'end_time', $post->ID ),
-				'tracks'        => array(),
-				'reward'        => get_field( 'reward', $post->ID ),
-				'lat'           => get_field( 'latitude', $post->ID ),
-				'lon'           => get_field( 'longitude', $post->ID ),
-				'zone'			=> get_field( 'zone', $post->ID ),
-				'beacons'		=> array()
-		);
-		
-		$foundZone = false;
-		foreach ($return->tracks as $track) {
-			if ($track['name'] == 'Zone '.get_field( 'zone', $post->ID )) {
-				$foundZone = true;
-				$session['tracks'][] = $track['ID'];
-				break;
-			}
-		}
-		if (!$foundZone) {
-			$trackID = intval(get_field( 'zone', $post->ID ));
-			$return->tracks[] = array(
-					'ID'                    => $trackID,
-					'name'                  => 'Zone '.get_field( 'zone', $post->ID )
-			);
-			$session['tracks'][] = $trackID;
-		}
-		
-		$tags = wp_get_post_tags( $post->ID );
-		foreach ($tags as $tag) {
-			if (strtolower($tag->name) == 'subject' || strtolower($tag->name) == 'general') {
-				$session['openday_category'] = strtolower($tag->name);
-			}
-			$session['tracks'][] = $tag->term_id;			
-		}
-		
-		$beacons = wp_get_post_terms( $post->ID, 'beacon' );
-		foreach ($beacons as $beacon) {
-				$session['beacons'][] = $beacon->term_id;
-		}
-		
-		foreach($return->schedule as $d => $day) {
-			if ($day->date == get_field( 'active_date', $post->ID )) {
-				$found_time = false;
-				foreach ($return->schedule[$d]->groups as $t => $time) {
-					if (strlen($session['timeStart']) > 0) { // Activity is scheduled
-						if ($time->time == substr($session['timeStart'], 0, -2).'00') {
-							$return->schedule[$d]->groups[$t]->sessions[] = $session;
-							$found_time = true;
-							break;
-						}
-					} else if ($time->time == $dropInLabel) { // Activity has no specific time
-						$return->schedule[$d]->groups[$t]->sessions[] = $session;
-						$found_time = true;
-						break;			
-					}
-				}
-				if (!$found_time) {
-					if (strlen($session['timeStart']) > 0) { // Activity is scheduled
-						$group->time = substr($session['timeStart'], 0, -2).'00';
-					} else {
-						$group->time = $dropInLabel;
-					}
-					$group->sessions = array($session);
-					$return->schedule[$d]->groups[] = $group; 
-					unset($group);
-				}
-				break; 
-			}
-		}
-
-		unset($session);
-	}
-	
-	foreach ($return->schedule as $d => &$day) {
-		usort($day->groups, function ($a, $b) {
-			if (strval($a->time) == strval($b->time)) {
-				return 0;
-			}
-			return (strval($a->time) < strval($b->time)) ? -1 : 1;
-		});
-	}
-	
-	foreach ($return->schedule as $d => &$day) {
-		foreach ($day->groups as $s => &$sessions) { // Convert start and end time strings to UNIX timestamps
-			if (strlen ($sessions->time) > 0 && $sessions->time != $dropInLabel) {
-				$sessions->time = timeToUTC($sessions->time, $day->date);
-			}
-			foreach ($sessions->sessions as &$session) {
-				if (strlen($session['timeStart']) > 0) {
-					$session['timeStart'] = timeToUTC($session['timeStart'], $day->date);
-				}
-				if (strlen($session['timeEnd']) > 0) {
-					$session['timeEnd'] = timeToUTC($session['timeEnd'], $day->date);
-				}
-			}
-		}
-		if (strlen($day->date) > 0) { // Convert date strings to UNIX timestamps
-			$day->date = timeToUTC('0000', $day->date);     
-        }
-	}
-	
-	$return->testing = array(
-		'subject' => array(),
-		'general' => array()
-	);
-	foreach ($return->schedule as $d => &$day) {
-		foreach ($day->groups as $s => &$sessions) {
-			foreach ($sessions->sessions as &$session) {
-				if ($session['openday_category']) {
-					if ($session['openday_category'] == 'subject') {
-						foreach ($session['tracks'] as $track) {
-							$return->testing['subject'][] = $track; 
-						}
-						$return->testing['subject'] = array_values(array_unique($return->testing['subject']));
-					} else {
-						foreach ($session['tracks'] as $track) {
-							$return->testing['general'][] = $track; 
-						}
-						$return->testing['general'] = array_values(array_unique($return->testing['general'])); 
-					}
-				}
-			}
-		}
-	}
-	foreach ($return->tracks as &$track) {
-		if (isset($track['openday_category'])) {
-			foreach ($return->testing['subject'] as $subject) {
-				if ($track['ID'] == $subject) {
-					$track['openday_category'] = 'subject';
-				}
-			}
-			foreach ($return->testing['general'] as $general) {
-				if ($track['ID'] == $general) {
-					$track['openday_category'] = 'general';
-				}
-			}
-		}
-	}
-	unset($return->testing);
-	
 	$response = new WP_REST_Response( $return );
 	$response->set_status( 200 );
 	$response->header( 'Access-Control-Allow-Origin', '*' );
 	return $response;
 }
-
-function timeToUTC ($time, $day) {
-	if (strlen ($time) == 4) {
-	    $timestamp = date_create_from_format('Gi Ymd', $time.' '.$day, new DateTimeZone('Europe/London'));
-    	$timestamp->setTimezone(new DateTimeZone('UTC'));
-	    return $timestamp->getTimestamp();
-	} else {
-		return time();
-	}
-}
-
-function xfest_get_events () {
-	global $namespace;
-	$terms = get_terms( array(
-    	'taxonomy' => 'events',
-    	'hide_empty' => true,
-	) );
-	$return    = array();
-	foreach ( $terms as $term ) {
-		$return[] = array(
-			'ID'        	=> $term->term_id,
-			'name'     		=> $term->name,
-			'description'	=> $term->description,
-			'data_route'	=> $namespace.'/event/'.$term->term_id
-		);
-	}
-	
-	$response = new WP_REST_Response( $return );
-	$response->set_status( 200 );
-	$response->header( 'Access-Control-Allow-Origin', '*' );
-	
-	return $response;
-}
-
-function xfest_get_messages ( $request ) {
-	$event_id = $request['eventid'];
-	
-	$query = array(
-			'numberposts'   => -1,
-			'post_type'     => 'message',
-			'post_status'   => 'publish',
-			'tax_query'     => array(
-					array(
-							'taxonomy' => 'events',
-							'terms'    => $event_id
-					)
-			),
-			'date_query' => array(
-				array(
-					'after' => '10 minutes ago'
-				)
-			)
-	);
-	$messages = get_posts( $query );
-	$return    = array();
-	foreach ( $messages as $message ) {
-		$return[] = array(
-			'ID'        	=> $message->ID,
-			'title'     	=> $message->post_title,
-			'message'		=> $message->post_content
-		);
-	}
-	
-	$response = new WP_REST_Response( $return );
-	$response->set_status( 200 );
-	$response->header( 'Access-Control-Allow-Origin', '*' );
-	
-	return $response;
-}
-*/
 
 /*
 *	Geo-meta in Locations custom post types
@@ -599,8 +168,8 @@ function render_location_geo_meta_box ( $post ) { ?>
 		// display blank map
 		var map = new google.maps.Map(
 			document.getElementById('location_geo_meta_box_map'), {
-				center: {lat: 52.938597, lng: -1.195291},
-				zoom: 15
+				center: {lat: 52.93909529959011, lng: -1.2034428119659424},
+				zoom: 16
 			}
 		);
 

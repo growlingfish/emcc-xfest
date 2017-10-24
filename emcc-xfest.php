@@ -4,7 +4,7 @@ Plugin Name: 		EMCC xFest
 Plugin URI:			https://github.com/growlingfish/emcc-xfest
 GitHub Plugin URI: 	https://github.com/growlingfish/emcc-xfest
 Description: 		EMCC xFest server
-Version:     		0.0.0.1
+Version:     		0.0.0.2
 Author:      		Ben Bedwell
 Author URI:  		http://www.growlingfish.com/
 License:     		GPL3

@@ -121,17 +121,17 @@ function xfest_register_api_hooks () {
 			)
 		)
 	) );
+	register_rest_route( $namespace, '/places/', array(
+		'methods'  => 'GET',
+		'callback' => 'xfest_get_all_places',
+		'args' => array()
+	) );
 }
 
 function xfest_get_event ( WP_REST_Request $request ) {
 	$event_id = $request['id'];
 
-	$campuses = array();
-
-	$return = array(
-		//'event_id' => $event_id,
-		$campuses
-	);
+	$return = get_places_for($event_id);
 
 	$response = new WP_REST_Response( $return );
 	$response->set_status( 200 );
@@ -139,8 +139,92 @@ function xfest_get_event ( WP_REST_Request $request ) {
 	return $response;
 }
 
+function xfest_get_all_places ( WP_REST_Request $request ) {
+	$return = get_places_for();
+
+	$response = new WP_REST_Response( $return );
+	$response->set_status( 200 );
+	$response->header( 'Access-Control-Allow-Origin', '*' );
+	return $response;
+}
+
+function get_places_for ($event_id = null) {
+	$result = array();
+	
+	$campuses = get_terms( array(
+    	'taxonomy' => 'campus',
+    	'hide_empty' => false,
+	) );
+	
+	foreach ($campuses as $campus) {
+		$c = array(
+			'campus' => $campus->name,
+			'locations' => array()
+		);
+	
+		$locationTypes = get_terms( array(
+			'hide_empty' => false,
+		) );
+		foreach ($locationTypes as $type) {
+			$location = array(
+				'location_type'	=> $type->name,
+				'places'		=> array()
+			);
+				
+			$places = get_posts(array(
+				'post_type' 		=> 'place',
+				'posts_per_page' 	=> -1,
+				'post_status'    	=> 'publish'
+				'tax_query' 		=> array(
+					array(
+						'taxonomy' => 'campus',
+						'field' => 'slug',
+						'terms' => $campus->slug
+					),
+					array(
+						'taxonomy' => 'category',
+						'field' => 'slug',
+						'terms' => $type->slug
+					)
+				)
+			));
+			foreach ($places as $place) {
+				$p = array(
+					'id'			=> $place->ID,
+					'place'			=> $place->post_title,
+					'description'	=> $place->post_content,
+					'coords'		=> array(
+						'lat'	=> get_field( 'latitude', $place->ID ),
+						'lon'	=> get_field( 'longitude', $place->ID )
+					),
+					'featured_image'	=> get_the_post_thumbnail_url($place->ID, 'medium'),
+					'images'			=> array()
+				);
+				$location['places'][] = $p;
+				/*
+				
+						{
+							"id" : 1,
+							"place": "cafe",
+							"description": "Description about the location",
+							"place_type" : "catering",
+							"coords" : {"lat" : 52.950027, "lon" : -1.186631},
+							"featured_image" : "",
+							"images" : ["assets/img/up.jpg","assets/img/jc.jpg","assets/img/sb.jpg","assets/img/up.jpg","assets/img/jc.jpg","assets/img/sb.jpg"]
+						}
+					
+				*/
+			}
+				
+			$c['locations'][] = $location;
+		}
+		
+		$result[] = $c;
+	}
+}
+
 /*
-*	Geo-meta in Locations custom post types
+*	Geo-meta in places custom post types
 */
 
 function xfest_enqueue_admin ($hook) {
@@ -149,27 +233,27 @@ function xfest_enqueue_admin ($hook) {
 }
 add_action( 'admin_enqueue_scripts', 'xfest_enqueue_admin' );
 
-function adding_custom_meta_boxes_location ( $post ) {
+function adding_custom_meta_boxes_place ( $post ) {
     add_meta_box( 
-        'location_geo_meta_box',
+        'place_geo_meta_box',
         __( 'Geotag' ),
-        'render_location_geo_meta_box',
-        'location',
+        'render_place_geo_meta_box',
+        'place',
         'advanced',
         'high'
     );
 }
-add_action( 'add_meta_boxes_location', 'adding_custom_meta_boxes_location' );
+add_action( 'add_meta_boxes_place', 'adding_custom_meta_boxes_place' );
 
-function render_location_geo_meta_box ( $post ) { ?>
-<div id="location_geo_meta_box_map" style="width: 100%; height: 400px;"></div>
+function render_place_geo_meta_box ( $post ) { ?>
+<div id="place_geo_meta_box_map" style="width: 100%; height: 400px;"></div>
 <script>	
 	jQuery(document).ready(function( $ ) {
 		var currentShape;
 
 		// display blank map
 		var map = new google.maps.Map(
-			document.getElementById('location_geo_meta_box_map'), {
+			document.getElementById('place_geo_meta_box_map'), {
 				center: {lat: 52.93909529959011, lng: -1.2034428119659424},
 				zoom: 16
 			}

@@ -4,7 +4,7 @@ Plugin Name: 		EMCC xFest
 Plugin URI:			https://github.com/growlingfish/emcc-xfest
 GitHub Plugin URI: 	https://github.com/growlingfish/emcc-xfest
 Description: 		EMCC xFest server
-Version:     		0.0.0.3
+Version:     		0.0.0.4
 Author:      		Ben Bedwell
 Author URI:  		http://www.growlingfish.com/
 License:     		GPL3
@@ -170,8 +170,8 @@ function get_places_for ($event_id = null) {
 				'location_type'	=> $type->name,
 				'places'		=> array()
 			);
-				
-			$places = get_posts(array(
+			
+			$args = array(
 				'post_type' 		=> 'place',
 				'posts_per_page' 	=> -1,
 				'post_status'    	=> 'publish'
@@ -187,7 +187,16 @@ function get_places_for ($event_id = null) {
 						'terms' => $type->slug
 					)
 				)
-			));
+			);
+			if (isset ($event_id) && $event_id != null) {
+				$args['tax_query'][] = array(
+					'taxonomy' => 'event',
+					'field' => 'term_id',
+					'terms' => $event_id
+				);
+			}
+			
+			$places = get_posts($args);
 			foreach ($places as $place) {
 				$p = array(
 					'id'			=> $place->ID,
@@ -200,20 +209,16 @@ function get_places_for ($event_id = null) {
 					'featured_image'	=> get_the_post_thumbnail_url($place->ID, 'medium'),
 					'images'			=> array()
 				);
+				if ($image_1 == get_field( 'image_1', $place->ID )) {
+					$p['images'][] = $image_1;
+				}
+				if ($image_2 == get_field( 'image_2', $place->ID )) {
+					$p['images'][] = $image_2;
+				}
+				if ($image_3 == get_field( 'image_3', $place->ID )) {
+					$p['images'][] = $image_3;
+				}
 				$location['places'][] = $p;
-				/*
-				
-						{
-							"id" : 1,
-							"place": "cafe",
-							"description": "Description about the location",
-							"place_type" : "catering",
-							"coords" : {"lat" : 52.950027, "lon" : -1.186631},
-							"featured_image" : "",
-							"images" : ["assets/img/up.jpg","assets/img/jc.jpg","assets/img/sb.jpg","assets/img/up.jpg","assets/img/jc.jpg","assets/img/sb.jpg"]
-						}
-					
-				*/
 			}
 				
 			$c['locations'][] = $location;

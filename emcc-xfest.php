@@ -4,7 +4,7 @@ Plugin Name: 		EMCC xFest
 Plugin URI:			https://github.com/growlingfish/emcc-xfest
 GitHub Plugin URI: 	https://github.com/growlingfish/emcc-xfest
 Description: 		EMCC xFest server
-Version:     		0.0.0.4
+Version:     		0.0.0.5
 Author:      		Ben Bedwell
 Author URI:  		http://www.growlingfish.com/
 License:     		GPL3
@@ -163,6 +163,7 @@ function get_places_for ($event_id = null) {
 		);
 	
 		$locationTypes = get_terms( array(
+			'taxonomy' => 'category',
 			'hide_empty' => false,
 		) );
 		foreach ($locationTypes as $type) {
@@ -174,7 +175,7 @@ function get_places_for ($event_id = null) {
 			$args = array(
 				'post_type' 		=> 'place',
 				'posts_per_page' 	=> -1,
-				'post_status'    	=> 'publish'
+				'post_status'    	=> 'publish',
 				'tax_query' 		=> array(
 					array(
 						'taxonomy' => 'campus',
@@ -226,6 +227,8 @@ function get_places_for ($event_id = null) {
 		
 		$result[] = $c;
 	}
+	
+	return $result;
 }
 
 /*
@@ -311,11 +314,6 @@ function render_place_geo_meta_box ( $post ) { ?>
 /*
 *	Simplify
 */
-
-add_action('init', 'xfest_remove_categories');
-function xfest_remove_categories () {
-	register_taxonomy('category', array());
-}
 
 add_action('admin_menu', 'xfest_remove_admin_options');
 function xfest_remove_admin_options () {

@@ -4,7 +4,7 @@ Plugin Name: 		EMCC xFest
 Plugin URI:			https://github.com/growlingfish/emcc-xfest
 GitHub Plugin URI: 	https://github.com/growlingfish/emcc-xfest
 Description: 		EMCC xFest server
-Version:     		0.0.0.5
+Version:     		0.0.0.6
 Author:      		Ben Bedwell
 Author URI:  		http://www.growlingfish.com/
 License:     		GPL3
@@ -126,6 +126,18 @@ function xfest_register_api_hooks () {
 		'callback' => 'xfest_get_all_places',
 		'args' => array()
 	) );
+	register_rest_route( $namespace, '/messages/(?P<eventid>\d+)/', array(
+		'methods'  => 'GET',
+		'callback' => 'xfest_get_messages',
+		'args' => array(
+			'eventid' => array(
+				'validate_callback' => function($param, $request, $key) {
+					return is_numeric( $param );
+				},
+				'required' => false
+			)
+		)
+	) );
 }
 
 function xfest_get_event ( WP_REST_Request $request ) {
@@ -164,7 +176,7 @@ function get_places_for ($event_id = null) {
 	
 		$locationTypes = get_terms( array(
 			'taxonomy' => 'category',
-			'hide_empty' => false,
+			'hide_empty' => true,
 		) );
 		foreach ($locationTypes as $type) {
 			$location = array(
@@ -174,7 +186,7 @@ function get_places_for ($event_id = null) {
 			
 			$args = array(
 				'post_type' 		=> 'place',
-				'posts_per_page' 	=> -1,
+				'numberposts' 		=> -1,
 				'post_status'    	=> 'publish',
 				'tax_query' 		=> array(
 					array(
@@ -210,14 +222,14 @@ function get_places_for ($event_id = null) {
 					'featured_image'	=> get_the_post_thumbnail_url($place->ID, 'medium'),
 					'images'			=> array()
 				);
-				if ($image_1 == get_field( 'image_1', $place->ID )) {
-					$p['images'][] = $image_1;
+				if ($image_1 = get_field( 'image_1', $place->ID )) {
+					$p['images'][] = $image_1['sizes']['medium_large'];
 				}
-				if ($image_2 == get_field( 'image_2', $place->ID )) {
-					$p['images'][] = $image_2;
+				if ($image_2 = get_field( 'image_2', $place->ID )) {
+					$p['images'][] = $image_2['sizes']['medium_large'];
 				}
-				if ($image_3 == get_field( 'image_3', $place->ID )) {
-					$p['images'][] = $image_3;
+				if ($image_3 = get_field( 'image_3', $place->ID )) {
+					$p['images'][] = $image_3['sizes']['medium_large'];
 				}
 				$location['places'][] = $p;
 			}
@@ -229,6 +241,42 @@ function get_places_for ($event_id = null) {
 	}
 	
 	return $result;
+}
+
+function xfest_get_messages ( $request ) {
+	$event_id = $request['eventid'];
+	
+	$args = array(
+			'numberposts'   => -1,
+			'post_type'     => 'message',
+			'post_status'   => 'publish',
+			'tax_query'     => array(),
+			'date_query' => array(
+				array(
+					'after' => '10 minutes ago'
+				)
+			)
+	);
+	if (isset ($event_id) && $event_id != null) {
+		$args['tax_query'][] = array(
+			'taxonomy' => 'event',
+			'terms'    => $event_id
+		);
+	}
+	$messages = get_posts( $args );
+	$return    = array();
+	foreach ( $messages as $message ) {
+		$return[] = array(
+			'id'        	=> $message->ID,
+			'message'		=> $message->post_content
+		);
+	}
+	
+	$response = new WP_REST_Response( $return );
+	$response->set_status( 200 );
+	$response->header( 'Access-Control-Allow-Origin', '*' );
+	
+	return $response;
 }
 
 /*

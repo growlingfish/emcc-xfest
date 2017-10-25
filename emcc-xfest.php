@@ -4,7 +4,7 @@ Plugin Name: 		EMCC xFest
 Plugin URI:			https://github.com/growlingfish/emcc-xfest
 GitHub Plugin URI: 	https://github.com/growlingfish/emcc-xfest
 Description: 		EMCC xFest server
-Version:     		0.0.0.6
+Version:     		0.0.0.7
 Author:      		Ben Bedwell
 Author URI:  		http://www.growlingfish.com/
 License:     		GPL3
@@ -126,9 +126,14 @@ function xfest_register_api_hooks () {
 		'callback' => 'xfest_get_all_places',
 		'args' => array()
 	) );
-	register_rest_route( $namespace, '/messages/(?P<eventid>\d+)/', array(
+	register_rest_route( $namespace, '/messages/', array(
 		'methods'  => 'GET',
 		'callback' => 'xfest_get_messages',
+		'args' => array()
+	) );
+	register_rest_route( $namespace, '/messages/(?P<eventid>\d*)/', array(
+		'methods'  => 'GET',
+		'callback' => 'xfest_get_messages_for',
 		'args' => array(
 			'eventid' => array(
 				'validate_callback' => function($param, $request, $key) {
@@ -243,26 +248,49 @@ function get_places_for ($event_id = null) {
 	return $result;
 }
 
-function xfest_get_messages ( $request ) {
-	$event_id = $request['eventid'];
+function xfest_get_messages () {
+	$messages = get_posts( array(
+			'numberposts'   => -1,
+			'post_type'     => 'message',
+			'post_status'   => 'publish',
+			'date_query' => array(
+				array(
+					'after' => '10 minutes ago'
+				)
+			)
+	) );
+	$return    = array();
+	foreach ( $messages as $message ) {
+		$return[] = array(
+			'id'        	=> $message->ID,
+			'message'		=> $message->post_content
+		);
+	}
 	
+	$response = new WP_REST_Response( $return );
+	$response->set_status( 200 );
+	$response->header( 'Access-Control-Allow-Origin', '*' );
+	
+	return $response;
+}
+
+function xfest_get_messages_for ( WP_REST_Request $request ) {
 	$args = array(
 			'numberposts'   => -1,
 			'post_type'     => 'message',
 			'post_status'   => 'publish',
-			'tax_query'     => array(),
+			'tax_query'     => array(
+				array(
+					'taxonomy' => 'event',
+					'terms'    => $request['eventid']
+				)
+			),
 			'date_query' => array(
 				array(
 					'after' => '10 minutes ago'
 				)
 			)
 	);
-	if (isset ($event_id) && $event_id != null) {
-		$args['tax_query'][] = array(
-			'taxonomy' => 'event',
-			'terms'    => $event_id
-		);
-	}
 	$messages = get_posts( $args );
 	$return    = array();
 	foreach ( $messages as $message ) {

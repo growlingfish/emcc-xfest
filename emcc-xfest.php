@@ -219,7 +219,7 @@ function get_places_for ($event_id = null) {
 				$p = array(
 					'id'			=> $place->ID,
 					'place'			=> $place->post_title,
-					'description'	=> $place->post_content,
+					'description'	=> wpautop($place->post_content, false),
 					'coords'		=> array(
 						'lat'	=> get_field( 'latitude', $place->ID ),
 						'lon'	=> get_field( 'longitude', $place->ID )
@@ -312,7 +312,7 @@ function xfest_get_messages_for ( WP_REST_Request $request ) {
 */
 
 function xfest_enqueue_admin ($hook) {
-	require_once('cred.php');
+	include_once('cred.php');
     wp_enqueue_script( 'google_maps', 'https://maps.googleapis.com/maps/api/js?key='.GOOGLEMAPSAPI.'&libraries=drawing', array( 'jquery' ) );
 }
 add_action( 'admin_enqueue_scripts', 'xfest_enqueue_admin' );

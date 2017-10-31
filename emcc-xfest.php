@@ -222,17 +222,17 @@ function get_places_for ($event_id = null) {
 						'lat'	=> get_field( 'latitude', $place->ID ),
 						'lon'	=> get_field( 'longitude', $place->ID )
 					),
-					'featured_image'	=> get_the_post_thumbnail_url($place->ID, 'medium'),
+					'featured_image'	=> get_the_post_thumbnail_url($place->ID, 'small'),
 					'images'			=> array()
 				);
 				if ($image_1 = get_field( 'image_1', $place->ID )) {
-					$p['images'][] = $image_1['sizes']['medium_large'];
+					$p['images'][] = $image_1['sizes']['medium'];
 				}
 				if ($image_2 = get_field( 'image_2', $place->ID )) {
-					$p['images'][] = $image_2['sizes']['medium_large'];
+					$p['images'][] = $image_2['sizes']['medium'];
 				}
 				if ($image_3 = get_field( 'image_3', $place->ID )) {
-					$p['images'][] = $image_3['sizes']['medium_large'];
+					$p['images'][] = $image_3['sizes']['medium'];
 				}
 				$location['places'][] = $p;
 			}

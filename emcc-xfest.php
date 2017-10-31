@@ -4,7 +4,7 @@ Plugin Name: 		EMCC xFest
 Plugin URI:			https://github.com/growlingfish/emcc-xfest
 GitHub Plugin URI: 	https://github.com/growlingfish/emcc-xfest
 Description: 		EMCC xFest server
-Version:     		0.0.0.7
+Version:     		0.0.0.8
 Author:      		Ben Bedwell
 Author URI:  		http://www.growlingfish.com/
 License:     		GPL3
@@ -261,10 +261,15 @@ function xfest_get_messages () {
 	) );
 	$return    = array();
 	foreach ( $messages as $message ) {
-		$return[] = array(
-			'id'        	=> $message->ID,
-			'message'		=> $message->post_content
-		);
+		$time = get_the_time('U', $message->ID);
+		$window = get_field( 'window', $message->ID ) * 60;
+		if (time() < ($time + $window)) {
+			$return[] = array(
+				'id'        	=> $message->ID,
+				'message'		=> $message->post_content,
+				'remaining'		=> (($time + $window) - time())
+			);
+		}
 	}
 	
 	$response = new WP_REST_Response( $return );
@@ -294,10 +299,15 @@ function xfest_get_messages_for ( WP_REST_Request $request ) {
 	$messages = get_posts( $args );
 	$return    = array();
 	foreach ( $messages as $message ) {
-		$return[] = array(
-			'id'        	=> $message->ID,
-			'message'		=> $message->post_content
-		);
+		$time = get_the_time('U', $message->ID);
+		$window = get_field( 'window', $message->ID ) * 60;
+		if (time() < ($time + $window)) {
+			$return[] = array(
+				'id'        	=> $message->ID,
+				'message'		=> $message->post_content,
+				'remaining'		=> (($time + $window) - time())
+			);
+		}
 	}
 	
 	$response = new WP_REST_Response( $return );

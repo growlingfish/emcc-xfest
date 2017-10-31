@@ -4,7 +4,7 @@ Plugin Name: 		EMCC xFest
 Plugin URI:			https://github.com/growlingfish/emcc-xfest
 GitHub Plugin URI: 	https://github.com/growlingfish/emcc-xfest
 Description: 		EMCC xFest server
-Version:     		0.0.0.9
+Version:     		0.0.1.0
 Author:      		Ben Bedwell
 Author URI:  		http://www.growlingfish.com/
 License:     		GPL3
@@ -26,22 +26,11 @@ function xfest_meta_key_filter( $query ) { // allow to filter Places by Event or
 			array(
 				'taxonomy' => 'campus',
 				'field' => 'term_id',
-				'terms' => $_GET['campus'],
+				'terms' => $_GET['campus']
 			)
 		);
 		$query->set( 'tax_query', $tax_query );
 	}
-
-	if ( $query->is_admin && isset( $_GET['event'] ) && strlen($_GET['event']) > 0 ) {
-		$tax_query = array(
-			array(
-				'taxonomy' => 'event',
-				'field' => 'term_id',
-				'terms' => $_GET['event'],
-			)
-		);
-		$query->set( 'tax_query', $tax_query );
-	}  
 	return $query;
 }
 
@@ -71,32 +60,6 @@ function xfest_filter_places_by_campus () {
     }
 }
 
-add_action( 'restrict_manage_posts', 'xfest_filter_places_by_event' );
-function xfest_filter_places_by_event () {
-    if (isset($_GET['post_type']) && $_GET['post_type'] == 'place') {
-    	$events = get_terms( array(
-			'taxonomy' => 'event'
-		) );
-        ?>
-        <select name="event">
-        <option value=""><?php _e('All Events', 'xfest'); ?></option>
-        <?php
-            $current_v = isset($_GET['event'])? $_GET['event']:'';
-            foreach ($events as $event) {
-                printf
-                    (
-                        '<option value="%s"%s>%s</option>',
-                        $event->term_id,
-                        $event->term_id == $current_v? ' selected="selected"':'',
-                        $event->name
-                    );
-                }
-        ?>
-        </select>
-        <?php
-    }
-}
-
 /*
 *	Custom API end-points
 */
@@ -106,18 +69,6 @@ $namespace = 'xfest/';
 add_action( 'rest_api_init', 'xfest_register_api_hooks' );
 function xfest_register_api_hooks () {
 	global $namespace;
-	register_rest_route( $namespace, '/event/(?P<id>\d+)/', array(
-		'methods'  => 'GET',
-		'callback' => 'xfest_get_event',
-		'args' => array(
-			'id' => array(
-				'validate_callback' => function($param, $request, $key) {
-					return is_numeric( $param );
-				},
-				'required' => true
-			)
-		)
-	) );
 	register_rest_route( $namespace, '/places/', array(
 		'methods'  => 'GET',
 		'callback' => 'xfest_get_all_places',
@@ -127,18 +78,6 @@ function xfest_register_api_hooks () {
 		'methods'  => 'GET',
 		'callback' => 'xfest_get_messages',
 		'args' => array()
-	) );
-	register_rest_route( $namespace, '/messages/(?P<eventid>\d*)/', array(
-		'methods'  => 'GET',
-		'callback' => 'xfest_get_messages_for',
-		'args' => array(
-			'eventid' => array(
-				'validate_callback' => function($param, $request, $key) {
-					return is_numeric( $param );
-				},
-				'required' => false
-			)
-		)
 	) );
 }
 
@@ -183,6 +122,7 @@ function get_places_for ($event_id = null) {
 		foreach ($locationTypes as $type) {
 			$location = array(
 				'location_type'	=> $type->name,
+				'location_id'	=> $type->term_id,
 				'places'		=> array()
 			);
 			

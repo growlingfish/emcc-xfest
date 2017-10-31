@@ -20,43 +20,38 @@ function xfest_activate () {
 }
 
 add_action( 'pre_get_posts', 'xfest_meta_key_filter' );
-function xfest_meta_key_filter( $query ) { // allow to filter Places by Event or Campus in the Admin panel
-	if ( $query->is_admin && isset( $_GET['campus'] ) && strlen($_GET['campus']) > 0 ) {
-		$tax_query = array(
-			array(
-				'taxonomy' => 'campus',
-				'field' => 'term_id',
-				'terms' => $_GET['campus']
-			)
-		);
-		$query->set( 'tax_query', $tax_query );
+function xfest_meta_key_filter( $query ) { // allow to filter Places by Campus in the Admin panel
+	if(isset($_GET['campus_admin_filter'])){
+		$post_format = sanitize_text_field($_GET['campus_admin_filter']);
+		if($post_format != 0){
+			$query->query_vars['tax_query'] = array(
+				array(
+					'taxonomy'  => 'campus',
+					'field'     => 'ID',
+					'terms'     => array($post_format)
+				)
+			);
+
+		}
 	}
-	return $query;
 }
 
 add_action( 'restrict_manage_posts', 'xfest_filter_places_by_campus' );
 function xfest_filter_places_by_campus () {
     if (isset($_GET['post_type']) && $_GET['post_type'] == 'place') {
-        $values = get_terms( array(
-			'taxonomy' => 'campus'
-		) );
-        ?>
-        <select name="campus">
-        <option value=""><?php _e('All Campuses', 'xfest'); ?></option>
-        <?php
-            $current_v = isset($_GET['campus'])? $_GET['campus']:'';
-            foreach ($values as $value) {
-                printf
-                    (
-                        '<option value="%s"%s>%s</option>',
-                        $value->term_id,
-                        $value->term_id == $current_v? ' selected="selected"':'',
-                        $value->name
-                    );
-                }
-        ?>
-        </select>
-        <?php
+        $campus_args = array(
+            'show_option_all'   => 'All Campuses',
+            'orderby'           => 'NAME',
+            'order'             => 'ASC',
+            'name'              => 'campus_admin_filter',
+            'taxonomy'          => 'campus'
+        );
+
+        if(isset($_GET['campus_admin_filter'])){
+            $campus_args['selected'] = sanitize_text_field($_GET['campus_admin_filter']);
+        }
+
+        wp_dropdown_categories($campus_args);
     }
 }
 

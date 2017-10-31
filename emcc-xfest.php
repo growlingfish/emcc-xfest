@@ -18,14 +18,14 @@ register_activation_hook( __FILE__, 'xfest_activate' );
 function xfest_activate () {
 	flush_rewrite_rules();
 }
-/*
+
 add_action( 'pre_get_posts', 'xfest_meta_key_filter' );
-function xfest_meta_key_filter( $query ) { // allow to filter Activities by Event or Zone in the Admin panel
-	if ( $query->is_admin && isset( $_GET['zone'] ) && strlen($_GET['zone']) > 0 ) {
+function xfest_meta_key_filter( $query ) { // allow to filter Places by Event or Campus in the Admin panel
+	if ( $query->is_admin && isset( $_GET['campus'] ) && strlen($_GET['campus']) > 0 ) {
 		$meta_key_query = array(
 			array(
-				'key' => 'zone',
-				'value' => $_GET['zone'],
+				'key' => 'campus',
+				'value' => $_GET['campus'],
 			)
 		);
 		$query->set( 'meta_query', $meta_key_query );
@@ -34,7 +34,7 @@ function xfest_meta_key_filter( $query ) { // allow to filter Activities by Even
 	if ( $query->is_admin && isset( $_GET['event'] ) && strlen($_GET['event']) > 0 ) {
 		$tax_query = array(
 			array(
-				'taxonomy' => 'events',
+				'taxonomy' => 'event',
 				'terms' => $_GET['event'],
 			)
 		);
@@ -43,21 +43,17 @@ function xfest_meta_key_filter( $query ) { // allow to filter Activities by Even
 	return $query;
 }
 
-add_action( 'restrict_manage_posts', 'xfest_filter_activities_by_zone' );
-function xfest_filter_activities_by_zone () {
-    if (isset($_GET['post_type']) && $_GET['post_type'] == 'activity') {
-        $values = array(
-            'Zone 1' => '1', 
-            'Zone 2' => '2',
-            'Zone 3' => '3',
-            'Zone 4' => '4',
-            'Zone 5' => '5'
-        );
+add_action( 'restrict_manage_posts', 'xfest_filter_places_by_campus' );
+function xfest_filter_places_by_campus () {
+    if (isset($_GET['post_type']) && $_GET['post_type'] == 'place') {
+        $events = get_terms( array(
+			'taxonomy' => 'campus'
+		) );
         ?>
-        <select name="zone">
-        <option value=""><?php _e('All Zones', 'xfest'); ?></option>
+        <select name="campus">
+        <option value=""><?php _e('All Campuses', 'xfest'); ?></option>
         <?php
-            $current_v = isset($_GET['zone'])? $_GET['zone']:'';
+            $current_v = isset($_GET['campus'])? $_GET['campus']:'';
             foreach ($values as $label => $value) {
                 printf
                     (
@@ -73,11 +69,11 @@ function xfest_filter_activities_by_zone () {
     }
 }
 
-add_action( 'restrict_manage_posts', 'xfest_filter_activities_by_event' );
-function xfest_filter_activities_by_event () {
-    if (isset($_GET['post_type']) && $_GET['post_type'] == 'activity') {
+add_action( 'restrict_manage_posts', 'xfest_filter_places_by_event' );
+function xfest_filter_places_by_event () {
+    if (isset($_GET['post_type']) && $_GET['post_type'] == 'place') {
     	$events = get_terms( array(
-			'taxonomy' => 'events'
+			'taxonomy' => 'event'
 		) );
         ?>
         <select name="event">
@@ -98,7 +94,6 @@ function xfest_filter_activities_by_event () {
         <?php
     }
 }
-*/
 
 /*
 *	Custom API end-points

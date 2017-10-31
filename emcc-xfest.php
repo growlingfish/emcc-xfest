@@ -22,19 +22,21 @@ function xfest_activate () {
 add_action( 'pre_get_posts', 'xfest_meta_key_filter' );
 function xfest_meta_key_filter( $query ) { // allow to filter Places by Event or Campus in the Admin panel
 	if ( $query->is_admin && isset( $_GET['campus'] ) && strlen($_GET['campus']) > 0 ) {
-		$meta_key_query = array(
+		$tax_query = array(
 			array(
-				'key' => 'campus',
-				'value' => $_GET['campus'],
+				'taxonomy' => 'campus',
+				'field' => 'term_id',
+				'terms' => $_GET['campus'],
 			)
 		);
-		$query->set( 'meta_query', $meta_key_query );
+		$query->set( 'tax_query', $tax_query );
 	}
 
 	if ( $query->is_admin && isset( $_GET['event'] ) && strlen($_GET['event']) > 0 ) {
 		$tax_query = array(
 			array(
 				'taxonomy' => 'event',
+				'field' => 'term_id',
 				'terms' => $_GET['event'],
 			)
 		);
@@ -46,7 +48,7 @@ function xfest_meta_key_filter( $query ) { // allow to filter Places by Event or
 add_action( 'restrict_manage_posts', 'xfest_filter_places_by_campus' );
 function xfest_filter_places_by_campus () {
     if (isset($_GET['post_type']) && $_GET['post_type'] == 'place') {
-        $events = get_terms( array(
+        $values = get_terms( array(
 			'taxonomy' => 'campus'
 		) );
         ?>
@@ -54,13 +56,13 @@ function xfest_filter_places_by_campus () {
         <option value=""><?php _e('All Campuses', 'xfest'); ?></option>
         <?php
             $current_v = isset($_GET['campus'])? $_GET['campus']:'';
-            foreach ($values as $label => $value) {
+            foreach ($values as $value) {
                 printf
                     (
                         '<option value="%s"%s>%s</option>',
-                        $value,
-                        $value == $current_v? ' selected="selected"':'',
-                        $label
+                        $value->term_id,
+                        $value->term_id == $current_v? ' selected="selected"':'',
+                        $value->name
                     );
                 }
         ?>

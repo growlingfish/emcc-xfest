@@ -4,7 +4,7 @@ Plugin Name: 		EMCC xFest
 Plugin URI:			https://github.com/growlingfish/emcc-xfest
 GitHub Plugin URI: 	https://github.com/growlingfish/emcc-xfest
 Description: 		EMCC xFest server
-Version:     		0.0.1.0
+Version:     		0.0.1.1
 Author:      		Ben Bedwell
 Author URI:  		http://www.growlingfish.com/
 License:     		GPL3
@@ -157,7 +157,7 @@ function get_places_for ($event_id = null) {
 						'lat'	=> get_field( 'latitude', $place->ID ),
 						'lon'	=> get_field( 'longitude', $place->ID )
 					),
-					'featured_image'	=> get_the_post_thumbnail_url($place->ID, 'small'),
+					'featured_image'	=> get_the_post_thumbnail_url($place->ID, 'thumbnail'),
 					'images'			=> array()
 				);
 				if ($image_1 = get_field( 'image_1', $place->ID )) {

@@ -34,7 +34,7 @@ function xfest_force_post_cat () {
 		  .find('.ntdelbutton');
 		if(campuses.length && campuses.length > 0) {
 		} else {
-			alert('You have not selected any category for the post. Kindly select post category.');
+			alert('You have not selected a Campus for this Place. Please add a Campus.');
 			setTimeout(\"jQuery('#ajax-loading').css('visibility', 'hidden');\", 100);
 			jQuery('#tagsdiv-campus').css('background', '#F96');
 			setTimeout(\"jQuery('#publish').removeClass('button-primary-disabled');\", 100);

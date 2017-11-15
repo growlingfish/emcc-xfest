@@ -4,7 +4,7 @@ Plugin Name: 		EMCC xFest
 Plugin URI:			https://github.com/growlingfish/emcc-xfest
 GitHub Plugin URI: 	https://github.com/growlingfish/emcc-xfest
 Description: 		EMCC xFest server
-Version:     		0.0.1.1
+Version:     		0.0.1.2
 Author:      		Ben Bedwell
 Author URI:  		http://www.growlingfish.com/
 License:     		GPL3
@@ -17,6 +17,32 @@ defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 register_activation_hook( __FILE__, 'xfest_activate' );
 function xfest_activate () {
 	flush_rewrite_rules();
+}
+
+add_action('admin_init', 'xfest_init');
+function xfest_init () {
+	wp_enqueue_script('jquery');
+}
+
+add_action('edit_form_advanced', 'xfest_force_post_cat');
+function xfest_force_post_cat () {
+	echo "<script type='text/javascript'>\n";
+	echo "
+	jQuery('#publish').click(function() {
+		var campuses = jQuery('#campus')
+		  .find('.tagchecklist')
+		  .find('.ntdelbutton');
+		if(campuses.length && campuses.length > 0) {
+		} else {
+			alert('You have not selected any category for the post. Kindly select post category.');
+			setTimeout(\"jQuery('#ajax-loading').css('visibility', 'hidden');\", 100);
+			jQuery('#tagsdiv-campus').css('background', '#F96');
+			setTimeout(\"jQuery('#publish').removeClass('button-primary-disabled');\", 100);
+			return false;
+		}
+	});
+	";
+	echo "</script>\n";
 }
 
 add_action( 'pre_get_posts', 'xfest_meta_key_filter' );

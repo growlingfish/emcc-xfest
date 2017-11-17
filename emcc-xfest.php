@@ -4,7 +4,7 @@ Plugin Name: 		EMCC xFest
 Plugin URI:			https://github.com/growlingfish/emcc-xfest
 GitHub Plugin URI: 	https://github.com/growlingfish/emcc-xfest
 Description: 		EMCC xFest server
-Version:     		0.0.1.2
+Version:     		0.0.1.3
 Author:      		Ben Bedwell
 Author URI:  		http://www.growlingfish.com/
 License:     		GPL3
@@ -24,8 +24,8 @@ function xfest_init () {
 	wp_enqueue_script('jquery');
 }
 
-add_action('edit_form_advanced', 'xfest_force_post_cat');
-function xfest_force_post_cat () {
+add_action('edit_form_advanced', 'xfest_force_post_campus');
+function xfest_force_post_campus () {
 	echo "<script type='text/javascript'>\n";
 	echo "
 	jQuery('#publish').click(function() {
@@ -33,6 +33,42 @@ function xfest_force_post_cat () {
 		  .find('.tagchecklist')
 		  .find('.ntdelbutton');
 		if(campuses.length && campuses.length > 0) {
+		} else {
+			alert('You have not selected a Campus for this Place. Please add a Campus.');
+			setTimeout(\"jQuery('#ajax-loading').css('visibility', 'hidden');\", 100);
+			jQuery('#tagsdiv-campus').css('background', '#F96');
+			setTimeout(\"jQuery('#publish').removeClass('button-primary-disabled');\", 100);
+			return false;
+		}
+	});
+	";
+	echo "</script>\n";
+}
+
+add_action('edit_form_advanced', 'xfest_force_post_category');
+function xfest_force_post_category () {
+	echo "<script type='text/javascript'>\n";
+	echo "
+	jQuery('#publish').click(function() {
+		var categories = jQuery('#taxonomy-category')
+		  .find('#categorychecklist')
+		  .find('.selectit')
+		  .find('input');
+		if(categories.length && categories.length > 0) {
+			var category_selected = false;
+			for (var counter = 0; counter < categories.length; counter++) {
+				if (categories.get(counter).checked == true) {
+					category_selected = true;
+					break;
+				}
+			}
+			if (!category_selected) {
+				alert('You have not selected a Category for this Place. Please add a Category.');
+				setTimeout(\"jQuery('#ajax-loading').css('visibility', 'hidden');\", 100);
+				jQuery('#taxonomy-category').find('.tabs-panel').css('background', '#F96');
+				setTimeout(\"jQuery('#publish').removeClass('button-primary-disabled');\", 100);
+				return false;
+			}
 		} else {
 			alert('You have not selected a Campus for this Place. Please add a Campus.');
 			setTimeout(\"jQuery('#ajax-loading').css('visibility', 'hidden');\", 100);
